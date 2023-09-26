@@ -11,8 +11,11 @@ namespace Todo.Core.IServices
     {
         Task<AuthDTO> Register(RegisterDTO model);
         Task<AuthDTO> Login(LoginDTO model);
-       
+        Task Logout(string id);
+        Task<AuthUser?> GetUser(string id);
+        Task<bool> DeleteUser(string id);
 
+    
         //UserGetResponse UpdateUser(UserUpdateRequest request);
 
         //void DeleteUser(Guid id);

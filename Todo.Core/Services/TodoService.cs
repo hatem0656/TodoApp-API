@@ -24,17 +24,17 @@ namespace Todo.Core.Services
 
         }
 
-        public async Task<IEnumerable<TodoGetResponse>> GetAllTodo()
+        public async Task<IEnumerable<TodoGetResponse>> GetAllTodo(string userId)
         {
-            var specification = new TodoSpecification();
+            var specification = new TodoSpecification(userId);
             var todos = await _repo.GetAllWithSpecs(specification);
             var data = _mapper.Map<IEnumerable<TodoGetResponse>>(todos);
             return data;
         }
 
-        public async Task<TodoGetResponse> GetTodo(Guid id)
+        public async Task<TodoGetResponse> GetTodo(Guid id , string userId)
         {
-            var specification = new TodoSpecification(id);
+            var specification = new TodoSpecification(id , userId);
             var todo = await _repo.GetWithSpecs(specification);
             var data = _mapper.Map<TodoGetResponse>(todo);
             return data;
@@ -43,9 +43,7 @@ namespace Todo.Core.Services
         public async Task<TodoUpdated> CreateTodo(TodoAddRequest newTodo)
         {
             var todo = _mapper.Map<TodoItem>(newTodo);
-
             var createdTodo = await _repo.Add(todo);
-
             var data = _mapper.Map<TodoUpdated>(createdTodo);
             return data;
         }
@@ -53,7 +51,6 @@ namespace Todo.Core.Services
         {
             var todo = _mapper.Map<TodoItem>(updatedTodo);
             _repo.Update(todo);
-
             return updatedTodo;
         }
 
@@ -64,9 +61,6 @@ namespace Todo.Core.Services
             _repo.Delete(todo);
             return id;
         }
-
-
-
 
     }
 }

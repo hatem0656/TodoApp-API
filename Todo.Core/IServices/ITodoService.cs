@@ -9,9 +9,9 @@ namespace Todo.Core.IServices
 {
     public interface ITodoService
     {
-        Task<IEnumerable<TodoGetResponse>> GetAllTodo();
+        Task<IEnumerable<TodoGetResponse>> GetAllTodo(string userId);
 
-        Task<TodoGetResponse> GetTodo(Guid id);
+        Task<TodoGetResponse> GetTodo(Guid id, string userId);
 
         Task<TodoUpdated> CreateTodo(TodoAddRequest request);
 

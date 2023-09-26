@@ -11,12 +11,12 @@ namespace Todo.Core.Specification
     public class TodoSpecification : BaseSpecification<TodoItem>
     {
 
-        public TodoSpecification()
+        public TodoSpecification(string userId) : base(todo => todo.UserId == userId)
         {
             AddInclude(x => x.User);
 
         }
-        public TodoSpecification(Guid id) : base(todo => todo.Id == id)
+        public TodoSpecification(Guid id , string userId) : base(todo => todo.Id == id && todo.UserId == userId)
         {
 
             AddInclude(x => x.User);

@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
@@ -58,20 +59,22 @@ namespace Todo.Core.Services
 
             var jwtSecurityToken = await CreateJwtToken(user);
 
+
             return new AuthDTO
             {
+                Username = user.UserName,
                 Email = user.Email,
-                ExpiresOn = jwtSecurityToken.ValidTo,
-                IsAuthenticated = true,
+                IsAuthenticated = false,
                 Roles = new List<string> { "User" },
                 Token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken),
-                Username = user.UserName
+                ExpiresOn = jwtSecurityToken.ValidTo,
+
             };
         }
 
         public async Task<AuthDTO> Login(LoginDTO model)
         {
-              var AuthDTO = new AuthDTO();
+            var AuthDTO = new AuthDTO();
 
             var user = await _user.FindUserByEmail(model.Email);
 
@@ -82,10 +85,14 @@ namespace Todo.Core.Services
             }
 
             var jwtSecurityToken = await CreateJwtToken(user);
+            string token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
+
+            await _user.SetUserToken(user, "Admin", "jwt", token);
+
             var rolesList = await _user.GetUserRoles(user);
 
             AuthDTO.IsAuthenticated = true;
-            AuthDTO.Token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
+            AuthDTO.Token = token;
             AuthDTO.Email = user.Email;
             AuthDTO.Username = user.UserName;
             AuthDTO.ExpiresOn = jwtSecurityToken.ValidTo;
@@ -94,7 +101,43 @@ namespace Todo.Core.Services
             return AuthDTO;
         }
 
+        public async Task<AuthUser?> GetUser(string id)
+        {
+            var userData = new AuthUser();
 
+            var user = await _user.FindUserById(id);
+            if (user is null) return null;
+
+            var token = await _user.GetUserToken(user, "Admin", "jwt");
+            if (token is null) return userData;
+
+            var rolesList = await _user.GetUserRoles(user);
+
+            userData.Username = user.UserName;
+            userData.Email = user.Email;
+            userData.Roles = rolesList.ToList();
+
+            return userData; 
+
+        }
+
+        public async Task Logout(string id)
+        {
+            var user = await _user.FindUserById(id);
+
+            await _user.DeleteUserToken(user, "Admin", "jwt");
+
+        }
+
+        public async Task<bool> DeleteUser(string id)
+        {
+            var user = await _user.FindUserById(id);
+            if(user is null) return false;
+
+            var result = await _user.DeleteUser(user);
+
+            return result.Succeeded; 
+        }
 
 
         private async Task<JwtSecurityToken> CreateJwtToken(User user)
@@ -118,6 +161,8 @@ namespace Todo.Core.Services
 
             var symmetricSecurityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwt.Key));
             var signingCredentials = new SigningCredentials(symmetricSecurityKey, SecurityAlgorithms.HmacSha256);
+        
+         
 
             var jwtSecurityToken = new JwtSecurityToken(
                 issuer: _jwt.Issuer,
@@ -126,6 +171,7 @@ namespace Todo.Core.Services
                 expires: DateTime.Now.AddDays(_jwt.DurationInDays),
                 signingCredentials: signingCredentials);
 
+            
             return jwtSecurityToken;
         }
 

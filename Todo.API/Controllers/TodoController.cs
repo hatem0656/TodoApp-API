@@ -1,32 +1,42 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using Todo.Core.Dtos.Todo;
 using Todo.Core.IServices;
 
 namespace Todo.API.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class TodoController : ControllerBase
     {
         private readonly ITodoService _todoService;
-        public TodoController(ITodoService todoService)
+        private readonly IUserService _userService;
+        public TodoController(ITodoService todoService, IUserService userService)
         {
             _todoService = todoService;
+            _userService = userService;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAllTodo()
         {
-            return Ok(await _todoService.GetAllTodo());
+            var userId = HttpContext.User.FindFirstValue("uid");
+
+            return Ok(await _todoService.GetAllTodo(userId));
         }
 
         [HttpGet]
         [Route("{id}")]
         public async Task<IActionResult> GetTodo(Guid id)
         {
-            var todo = await _todoService.GetTodo(id);
-            if(todo == null) return NotFound();
+            var userId = HttpContext.User.FindFirstValue("uid");
+        
+            var todo = await _todoService.GetTodo(id, userId);
+            if(todo == null) return NotFound(new { message = "Todo Item Not Found" });
+
             return Ok(todo);
         }
 
@@ -34,7 +44,6 @@ namespace Todo.API.Controllers
         public async Task<IActionResult> CreateTodo([FromBody] TodoAddRequest todo)
         {
             var createdTodo = await _todoService.CreateTodo(todo);
-
             return CreatedAtAction(nameof(GetTodo), new { id = createdTodo.Id  }, createdTodo);
         }
 
@@ -52,6 +61,8 @@ namespace Todo.API.Controllers
             if (deletedId == Guid.Empty) return NotFound();
             return NoContent();
         }
+
+       
     }
 }
 

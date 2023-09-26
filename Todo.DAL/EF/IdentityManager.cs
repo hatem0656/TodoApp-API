@@ -29,7 +29,12 @@ namespace Todo.DAL.EF
            return await _userManager.AddToRoleAsync(user, roleName);
         }
 
-      
+        public async Task<IdentityResult> DeleteUser(T user)
+        {
+            return await _userManager.DeleteAsync(user);
+        }
+
+
         public async Task<T?> FindUserById(string id)
         {
             return await _userManager.FindByIdAsync(id);
@@ -56,5 +61,20 @@ namespace Todo.DAL.EF
         {
             return await _userManager.CheckPasswordAsync(user, password);
         }
+
+        public async Task<IdentityResult> SetUserToken(T user, string provider, string tokenName, string tokenValue)
+        {
+            return await _userManager.SetAuthenticationTokenAsync(user, provider, tokenName, tokenValue);
+        }
+
+        public async Task<string?> GetUserToken(T user, string provider, string tokenName)
+        {
+            return await _userManager.GetAuthenticationTokenAsync(user, provider, tokenName);
+        }  
+        public async Task<IdentityResult> DeleteUserToken(T user, string provider, string tokenName)
+        {
+            return await _userManager.RemoveAuthenticationTokenAsync(user, provider, tokenName);
+        }
+
     }
 }

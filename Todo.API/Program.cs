@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.Configuration;
 using System.Text;
 using System.Text.Json.Serialization;
 using Todo.API.Helpers;
@@ -27,7 +26,7 @@ options.UseSqlServer(builder.Configuration.GetConnectionString("TodoAPIConnectio
 builder.Services.AddControllers().AddJsonOptions(x =>
                 x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 
-//P@ssword112
+
 
 // Setting Default Configuration for JWT 
 builder.Services.AddAuthentication(options =>
@@ -45,6 +44,7 @@ builder.Services.AddAuthentication(options =>
                     ValidateIssuer = true,
                     ValidateAudience = true,
                     ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero,
                     ValidIssuer = builder.Configuration["JWT:Issuer"],
                     ValidAudience = builder.Configuration["JWT:Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Key"]))
